@@ -1,215 +1,44 @@
+# Restore the correct tracker section into the final clean sheet, removing all others
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>SkillScape Character Sheet (Polished)</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1000px; }
-    h1, h2 { border-bottom: 1px solid #000; padding-bottom: 4px; }
-    .section { margin-bottom: 25px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-    th, td { border: 1px solid #999; padding: 6px; text-align: center; }
-    input[type="text"] { width: 140px; }
-    button { padding: 3px 6px; }
-    textarea { width: 100%; height: 100px; margin-top: 10px; }
-  </style>
-</head>
-<body>
+final_ultraclean_fixed_path = "/mnt/data/SkillScape_Character_Sheet_ULTRACLEAN_FIXED.html"
 
-<h1>SkillScape Character Sheet</h1>
-
+# Tracker block with effects
+final_tracker_effects = """
 <div class="section">
-  <label>Character Name:</label><input type="text" />
-  <label style="margin-left: 20px;">Player Name:</label><input type="text" />
-</div>
-
-<div class="section">
-  <h2>Stats</h2>
-  <p>Unspent Stat Points: <span id="availableStats">20</span></p>
-  <table id="statsTable">
-    <thead>
-      <tr><th>Stat</th><th>−</th><th>Value</th><th>+</th></tr>
-    </thead>
-    <tbody id="stats"></tbody>
-  </table>
-</div>
-
-<div class="section">
-  <h2>Skills</h2>
-  <p>Extra Skill Points to Assign: <span id="availableSkillPoints">5</span></p>
+  <h2>Damage Tracker</h2>
   <table>
-    <thead>
-      <tr><th>Skill Name</th><th>Lvl</th><th>+1</th><th>−1</th><th>XP</th><th>+1 XP</th><th>Level Up</th></tr>
-    </thead>
-    <tbody id="skills"></tbody>
+    <tr>
+      <td><label><input type="radio" name="damage" /> Healthy</label><br><small>(no penalty)</small></td>
+      <td><label><input type="radio" name="damage" /> Minor Injury</label><br><small>(-1 penalty)</small></td>
+      <td><label><input type="radio" name="damage" /> Moderate Injury</label><br><small>(-2 penalty)</small></td>
+      <td><label><input type="radio" name="damage" /> Severe Injury</label><br><small>(-3 penalty)</small></td>
+      <td><label><input type="radio" name="damage" /> Incapacitated</label><br><small>(KO/Unconscious)</small></td>
+    </tr>
   </table>
 </div>
 
 <div class="section">
-  <h2>Notes</h2>
-  <textarea placeholder="Write character notes here..."></textarea>
+  <h2>Stress Tracker</h2>
+  <table>
+    <tr>
+      <td><label><input type="radio" name="stress" /> Calm</label><br><small>(no penalty)</small></td>
+      <td><label><input type="radio" name="stress" /> Anxious</label><br><small>(-1 penalty)</small></td>
+      <td><label><input type="radio" name="stress" /> Stressed</label><br><small>(-2 penalty)</small></td>
+      <td><label><input type="radio" name="stress" /> Panicked</label><br><small>(-3 penalty)</small></td>
+      <td><label><input type="radio" name="stress" /> Mental Breakdown</label><br><small>(mental collapse)</small></td>
+    </tr>
+  </table>
 </div>
+"""
 
-<script>
-window.onload = function () {
-  const statList = ['Physicality', 'Agility', 'Senses', 'Understanding', 'Knowledge', 'Personality'];
-  const stats = {};
-  let availableStatPoints = 20;
-  let availableSkillPoints = 5;
-  let totalSkillLevelsGained = 0;
+# Insert tracker block just before the Notes section
+final_final_html = ultraclean_html.replace(
+    '<div class="section">\n  <h2>Notes</h2>',
+    final_tracker_effects + '\n\n<div class="section">\n  <h2>Notes</h2>'
+)
 
-  statList.forEach(stat => stats[stat] = 0);
+# Save the corrected file
+with open(final_ultraclean_fixed_path, "w") as f:
+    f.write(final_final_html)
 
-  const statTable = document.getElementById("stats");
-  statList.forEach(stat => {
-    const row = document.createElement("tr");
-    const nameCell = document.createElement("td");
-    nameCell.innerText = stat;
-    const minusCell = document.createElement("td");
-    const valueCell = document.createElement("td");
-    const plusCell = document.createElement("td");
-
-    const minus = document.createElement("button");
-    minus.innerText = "−";
-    minus.onclick = () => {
-      if (stats[stat] > 0) {
-        stats[stat]--;
-        availableStatPoints++;
-        updateStat(stat);
-        updateStatPointDisplay();
-      }
-    };
-    minusCell.appendChild(minus);
-
-    const val = document.createElement("span");
-    val.id = stat;
-    val.innerText = stats[stat];
-    valueCell.appendChild(val);
-
-    const plus = document.createElement("button");
-    plus.innerText = "+";
-    plus.onclick = () => {
-      if (stats[stat] < 5 && availableStatPoints > 0) {
-        stats[stat]++;
-        availableStatPoints--;
-        updateStat(stat);
-        updateStatPointDisplay();
-      }
-    };
-    plusCell.appendChild(plus);
-
-    row.appendChild(nameCell);
-    row.appendChild(minusCell);
-    row.appendChild(valueCell);
-    row.appendChild(plusCell);
-    statTable.appendChild(row);
-  });
-
-  function updateStat(stat) {
-    document.getElementById(stat).innerText = stats[stat];
-  }
-
-  function updateStatPointDisplay() {
-    document.getElementById("availableStats").innerText = availableStatPoints;
-  }
-
-  function updateSkillPointDisplay() {
-    document.getElementById("availableSkillPoints").innerText = availableSkillPoints;
-  }
-
-  const skillDiv = document.getElementById("skills");
-  for (let i = 1; i <= 10; i++) {
-    let level = 1;
-    let xp = 0;
-    const row = document.createElement("tr");
-
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.placeholder = "Skill Name";
-    const nameCell = document.createElement("td");
-    nameCell.appendChild(nameInput);
-
-    const levelCell = document.createElement("td");
-    const levelDisplay = document.createElement("span");
-    levelDisplay.id = "skill" + i + "_lvl";
-    levelDisplay.innerText = level;
-    levelCell.appendChild(levelDisplay);
-
-    const addLevelCell = document.createElement("td");
-    const addLevel = document.createElement("button");
-    addLevel.innerText = "+1";
-    addLevel.onclick = () => {
-      if (availableSkillPoints > 0 && level < 5) {
-        level++;
-        levelDisplay.innerText = level;
-        availableSkillPoints--;
-        updateSkillPointDisplay();
-      }
-    };
-    addLevelCell.appendChild(addLevel);
-
-    const subLevelCell = document.createElement("td");
-    const subLevel = document.createElement("button");
-    subLevel.innerText = "−1";
-    subLevel.onclick = () => {
-      if (level > 1) {
-        level--;
-        levelDisplay.innerText = level;
-        availableSkillPoints++;
-        updateSkillPointDisplay();
-      }
-    };
-    subLevelCell.appendChild(subLevel);
-
-    const xpCell = document.createElement("td");
-    const xpDisplay = document.createElement("span");
-    xpDisplay.id = "skill" + i + "_xp";
-    xpDisplay.innerText = xp;
-    xpCell.appendChild(xpDisplay);
-
-    const xpBtnCell = document.createElement("td");
-    const addXP = document.createElement("button");
-    addXP.innerText = "+1 XP";
-    addXP.onclick = () => {
-      xp++;
-      xpDisplay.innerText = xp;
-    };
-    xpBtnCell.appendChild(addXP);
-
-    const levelUpCell = document.createElement("td");
-    const levelUp = document.createElement("button");
-    levelUp.innerText = "Level Up";
-    levelUp.onclick = () => {
-      const needed = level * 5;
-      if (xp >= needed && level < 5) {
-        level++;
-        xp = 0;
-        levelDisplay.innerText = level;
-        xpDisplay.innerText = 0;
-        totalSkillLevelsGained++;
-        if (totalSkillLevelsGained % 3 === 0) {
-          availableStatPoints++;
-          updateStatPointDisplay();
-        }
-      }
-    };
-    levelUpCell.appendChild(levelUp);
-
-    row.appendChild(nameCell);
-    row.appendChild(levelCell);
-    row.appendChild(addLevelCell);
-    row.appendChild(subLevelCell);
-    row.appendChild(xpCell);
-    row.appendChild(xpBtnCell);
-    row.appendChild(levelUpCell);
-    skillDiv.appendChild(row);
-  }
-
-  updateStatPointDisplay();
-  updateSkillPointDisplay();
-};
-</script>
-
-</body>
-</html>
+final_ultraclean_fixed_path
