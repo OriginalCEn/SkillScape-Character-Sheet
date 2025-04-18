@@ -223,5 +223,72 @@ window.onload = function () {
 
 </script>
 
+
+<div class="section">
+  <button onclick="saveCharacter()">💾 Save Character</button>
+  <button onclick="loadCharacter()">📂 Load Character</button>
+  <button onclick="clearCharacter()">🗑️ Clear Save</button>
+</div>
+<script>
+function saveCharacter() {
+  const characterData = {
+    characterName: document.querySelector('input[placeholder="Character Name"]').value,
+    playerName: document.querySelector('input[placeholder="Player Name"]').value,
+    stats: {},
+    skills: [],
+    damage: document.querySelector('input[name="damage"]:checked')?.value,
+    stress: document.querySelector('input[name="stress"]:checked')?.value,
+    notes: document.querySelector('textarea').value,
+    availableStatPoints: availableStatPoints,
+    availableSkillPoints: availableSkillPoints
+  };
+  statList.forEach(stat => { characterData.stats[stat] = stats[stat]; });
+  const skillRows = document.querySelectorAll('#skills tr');
+  skillRows.forEach(row => {
+    const skill = {
+      name: row.cells[0].querySelector('input').value,
+      level: parseInt(row.cells[1].innerText),
+      xp: parseInt(row.cells[4].innerText)
+    };
+    characterData.skills.push(skill);
+  });
+  localStorage.setItem('skillscapeCharacter', JSON.stringify(characterData));
+  alert("Character saved!");
+}
+
+function loadCharacter() {
+  const savedData = JSON.parse(localStorage.getItem('skillscapeCharacter'));
+  if (!savedData) { alert("No saved character found!"); return; }
+  document.querySelector('input[placeholder="Character Name"]').value = savedData.characterName;
+  document.querySelector('input[placeholder="Player Name"]').value = savedData.playerName;
+  document.querySelector('textarea').value = savedData.notes;
+  availableStatPoints = savedData.availableStatPoints;
+  availableSkillPoints = savedData.availableSkillPoints;
+  updateStatPointDisplay();
+  updateSkillPointDisplay();
+  for (let stat in savedData.stats) {
+    stats[stat] = savedData.stats[stat];
+    document.getElementById(stat).innerText = stats[stat];
+  }
+  const skillRows = document.querySelectorAll('#skills tr');
+  savedData.skills.forEach((skill, index) => {
+    if(skillRows[index]) {
+      skillRows[index].cells[0].querySelector('input').value = skill.name;
+      skillRows[index].cells[1].innerText = skill.level;
+      skillRows[index].cells[4].innerText = skill.xp;
+    }
+  });
+  if(savedData.damage) document.querySelector(`input[name="damage"][value="${savedData.damage}"]`).checked = true;
+  if(savedData.stress) document.querySelector(`input[name="stress"][value="${savedData.stress}"]`).checked = true;
+  alert("Character loaded!");
+}
+
+function clearCharacter() {
+  if (confirm("Clear saved character?")) {
+    localStorage.removeItem('skillscapeCharacter');
+    alert("Save cleared.");
+  }
+}
+</script>
 </body>
 </html>
