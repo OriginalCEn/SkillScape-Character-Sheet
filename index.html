@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>SkillScape Character Sheet (Polished)</title>
+  <title>SkillScape Character Sheet (Final)</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 40px; max-width: 1000px; }
     h1, h2 { border-bottom: 1px solid #000; padding-bottom: 4px; }
@@ -45,7 +46,6 @@
   </table>
 </div>
 
-
 <div class="section">
   <h2>Damage Tracker</h2>
   <table>
@@ -72,13 +72,13 @@
   </table>
 </div>
 
-
 <div class="section">
   <h2>Notes</h2>
   <textarea placeholder="Write character notes here..."></textarea>
 </div>
 
 <script>
+
 window.onload = function () {
   const statList = ['Physicality', 'Agility', 'Senses', 'Understanding', 'Knowledge', 'Personality'];
   const stats = {};
@@ -91,25 +91,58 @@ window.onload = function () {
   const statTable = document.getElementById("stats");
   statList.forEach(stat => {
     const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${stat}</td>
-      <td><button onclick="changeStat('${stat}', -1)">−</button></td>
-      <td><span id="${stat}">0</span></td>
-      <td><button onclick="changeStat('${stat}', 1)">+</button></td>
-    `;
+    const nameCell = document.createElement("td");
+    nameCell.innerText = stat;
+    const minusCell = document.createElement("td");
+    const valueCell = document.createElement("td");
+    const plusCell = document.createElement("td");
+
+    const minus = document.createElement("button");
+    minus.innerText = "−";
+    minus.onclick = () => {
+      if (stats[stat] > 0) {
+        stats[stat]--;
+        availableStatPoints++;
+        updateStat(stat);
+        updateStatPointDisplay();
+      }
+    };
+    minusCell.appendChild(minus);
+
+    const val = document.createElement("span");
+    val.id = stat;
+    val.innerText = stats[stat];
+    valueCell.appendChild(val);
+
+    const plus = document.createElement("button");
+    plus.innerText = "+";
+    plus.onclick = () => {
+      if (stats[stat] < 5 && availableStatPoints > 0) {
+        stats[stat]++;
+        availableStatPoints--;
+        updateStat(stat);
+        updateStatPointDisplay();
+      }
+    };
+    plusCell.appendChild(plus);
+
+    row.appendChild(nameCell);
+    row.appendChild(minusCell);
+    row.appendChild(valueCell);
+    row.appendChild(plusCell);
     statTable.appendChild(row);
   });
 
-  window.changeStat = function(stat, delta) {
-    if (delta === 1 && stats[stat] < 5 && availableStatPoints > 0) {
-      stats[stat]++;
-      availableStatPoints--;
-    } else if (delta === -1 && stats[stat] > 0) {
-      stats[stat]--;
-      availableStatPoints++;
-    }
+  function updateStat(stat) {
     document.getElementById(stat).innerText = stats[stat];
+  }
+
+  function updateStatPointDisplay() {
     document.getElementById("availableStats").innerText = availableStatPoints;
+  }
+
+  function updateSkillPointDisplay() {
+    document.getElementById("availableSkillPoints").innerText = availableSkillPoints;
   }
 
   const skillDiv = document.getElementById("skills");
@@ -118,54 +151,76 @@ window.onload = function () {
     let xp = 0;
     const row = document.createElement("tr");
 
-    row.innerHTML = `
-      <td><input type="text" placeholder="Skill Name" /></td>
-      <td><span id="skill${i}_lvl">1</span></td>
-      <td><button onclick="changeSkill(${i}, 1)">+1</button></td>
-      <td><button onclick="changeSkill(${i}, -1)">−1</button></td>
-      <td><span id="skill${i}_xp">0</span></td>
-      <td><button onclick="addXP(${i})">+1 XP</button></td>
-      <td><button onclick="levelUp(${i})">Level Up</button></td>
-    `;
+    const skillNameInput = document.createElement("input");
+    skillNameInput.type = "text";
+    skillNameInput.placeholder = "Skill Name";
+    row.appendChild(document.createElement("td")).appendChild(skillNameInput);
 
-    skillDiv.appendChild(row);
+    const levelDisplay = document.createElement("span");
+    levelDisplay.innerText = level;
+    row.appendChild(document.createElement("td")).appendChild(levelDisplay);
 
-    window["changeSkill"] = function(index, delta) {
-      if (index !== i) return;
-      if (delta === 1 && availableSkillPoints > 0 && level < 5) {
+    const btnAddLevel = document.createElement("button");
+    btnAddLevel.innerText = "+1";
+    btnAddLevel.onclick = () => {
+      if (availableSkillPoints > 0 && level < 5) {
         level++;
         availableSkillPoints--;
-      } else if (delta === -1 && level > 1) {
+        levelDisplay.innerText = level;
+        updateSkillPointDisplay();
+      }
+    };
+    row.appendChild(document.createElement("td")).appendChild(btnAddLevel);
+
+    const btnSubLevel = document.createElement("button");
+    btnSubLevel.innerText = "−1";
+    btnSubLevel.onclick = () => {
+      if (level > 1) {
         level--;
         availableSkillPoints++;
+        levelDisplay.innerText = level;
+        updateSkillPointDisplay();
       }
-      document.getElementById(`skill${i}_lvl`).innerText = level;
-      document.getElementById("availableSkillPoints").innerText = availableSkillPoints;
-    }
+    };
+    row.appendChild(document.createElement("td")).appendChild(btnSubLevel);
 
-    window["addXP"] = function(index) {
-      if (index !== i) return;
+    const xpDisplay = document.createElement("span");
+    xpDisplay.innerText = xp;
+    row.appendChild(document.createElement("td")).appendChild(xpDisplay);
+
+    const btnAddXP = document.createElement("button");
+    btnAddXP.innerText = "+1 XP";
+    btnAddXP.onclick = () => {
       xp++;
-      document.getElementById(`skill${i}_xp`).innerText = xp;
-    }
+      xpDisplay.innerText = xp;
+    };
+    row.appendChild(document.createElement("td")).appendChild(btnAddXP);
 
-    window["levelUp"] = function(index) {
-      if (index !== i) return;
+    const btnLevelUp = document.createElement("button");
+    btnLevelUp.innerText = "Level Up";
+    btnLevelUp.onclick = () => {
       const requiredXP = level * 5;
       if (xp >= requiredXP && level < 5) {
         level++;
         xp = 0;
-        document.getElementById(`skill${i}_lvl`).innerText = level;
-        document.getElementById(`skill${i}_xp`).innerText = 0;
+        levelDisplay.innerText = level;
+        xpDisplay.innerText = xp;
         totalSkillLevelsGained++;
         if (totalSkillLevelsGained % 3 === 0) {
           availableStatPoints++;
-          document.getElementById("availableStats").innerText = availableStatPoints;
+          updateStatPointDisplay();
         }
       }
-    }
+    };
+    row.appendChild(document.createElement("td")).appendChild(btnLevelUp);
+
+    skillDiv.appendChild(row);
   }
+
+  updateStatPointDisplay();
+  updateSkillPointDisplay();
 };
+
 </script>
 
 </body>
