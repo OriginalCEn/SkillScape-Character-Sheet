@@ -1,9 +1,51 @@
-# Restore the correct tracker section into the final clean sheet, removing all others
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SkillScape Character Sheet (Polished)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1000px; }
+    h1, h2 { border-bottom: 1px solid #000; padding-bottom: 4px; }
+    .section { margin-bottom: 25px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #999; padding: 6px; text-align: center; }
+    input[type="text"] { width: 140px; }
+    button { padding: 3px 6px; }
+    textarea { width: 100%; height: 100px; margin-top: 10px; }
+  </style>
+</head>
+<body>
 
-final_ultraclean_fixed_path = "/mnt/data/SkillScape_Character_Sheet_ULTRACLEAN_FIXED.html"
+<h1>SkillScape Character Sheet</h1>
 
-# Tracker block with effects
-final_tracker_effects = """
+<div class="section">
+  <label>Character Name:</label><input type="text" />
+  <label style="margin-left: 20px;">Player Name:</label><input type="text" />
+</div>
+
+<div class="section">
+  <h2>Stats</h2>
+  <p>Unspent Stat Points: <span id="availableStats">20</span></p>
+  <table id="statsTable">
+    <thead>
+      <tr><th>Stat</th><th>−</th><th>Value</th><th>+</th></tr>
+    </thead>
+    <tbody id="stats"></tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h2>Skills</h2>
+  <p>Extra Skill Points to Assign: <span id="availableSkillPoints">5</span></p>
+  <table>
+    <thead>
+      <tr><th>Skill Name</th><th>Lvl</th><th>+1</th><th>−1</th><th>XP</th><th>+1 XP</th><th>Level Up</th></tr>
+    </thead>
+    <tbody id="skills"></tbody>
+  </table>
+</div>
+
+
 <div class="section">
   <h2>Damage Tracker</h2>
   <table>
@@ -29,16 +71,102 @@ final_tracker_effects = """
     </tr>
   </table>
 </div>
-"""
 
-# Insert tracker block just before the Notes section
-final_final_html = ultraclean_html.replace(
-    '<div class="section">\n  <h2>Notes</h2>',
-    final_tracker_effects + '\n\n<div class="section">\n  <h2>Notes</h2>'
-)
 
-# Save the corrected file
-with open(final_ultraclean_fixed_path, "w") as f:
-    f.write(final_final_html)
+<div class="section">
+  <h2>Notes</h2>
+  <textarea placeholder="Write character notes here..."></textarea>
+</div>
 
-final_ultraclean_fixed_path
+<script>
+window.onload = function () {
+  const statList = ['Physicality', 'Agility', 'Senses', 'Understanding', 'Knowledge', 'Personality'];
+  const stats = {};
+  let availableStatPoints = 20;
+  let availableSkillPoints = 5;
+  let totalSkillLevelsGained = 0;
+
+  statList.forEach(stat => stats[stat] = 0);
+
+  const statTable = document.getElementById("stats");
+  statList.forEach(stat => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${stat}</td>
+      <td><button onclick="changeStat('${stat}', -1)">−</button></td>
+      <td><span id="${stat}">0</span></td>
+      <td><button onclick="changeStat('${stat}', 1)">+</button></td>
+    `;
+    statTable.appendChild(row);
+  });
+
+  window.changeStat = function(stat, delta) {
+    if (delta === 1 && stats[stat] < 5 && availableStatPoints > 0) {
+      stats[stat]++;
+      availableStatPoints--;
+    } else if (delta === -1 && stats[stat] > 0) {
+      stats[stat]--;
+      availableStatPoints++;
+    }
+    document.getElementById(stat).innerText = stats[stat];
+    document.getElementById("availableStats").innerText = availableStatPoints;
+  }
+
+  const skillDiv = document.getElementById("skills");
+  for (let i = 1; i <= 10; i++) {
+    let level = 1;
+    let xp = 0;
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td><input type="text" placeholder="Skill Name" /></td>
+      <td><span id="skill${i}_lvl">1</span></td>
+      <td><button onclick="changeSkill(${i}, 1)">+1</button></td>
+      <td><button onclick="changeSkill(${i}, -1)">−1</button></td>
+      <td><span id="skill${i}_xp">0</span></td>
+      <td><button onclick="addXP(${i})">+1 XP</button></td>
+      <td><button onclick="levelUp(${i})">Level Up</button></td>
+    `;
+
+    skillDiv.appendChild(row);
+
+    window["changeSkill"] = function(index, delta) {
+      if (index !== i) return;
+      if (delta === 1 && availableSkillPoints > 0 && level < 5) {
+        level++;
+        availableSkillPoints--;
+      } else if (delta === -1 && level > 1) {
+        level--;
+        availableSkillPoints++;
+      }
+      document.getElementById(`skill${i}_lvl`).innerText = level;
+      document.getElementById("availableSkillPoints").innerText = availableSkillPoints;
+    }
+
+    window["addXP"] = function(index) {
+      if (index !== i) return;
+      xp++;
+      document.getElementById(`skill${i}_xp`).innerText = xp;
+    }
+
+    window["levelUp"] = function(index) {
+      if (index !== i) return;
+      const requiredXP = level * 5;
+      if (xp >= requiredXP && level < 5) {
+        level++;
+        xp = 0;
+        document.getElementById(`skill${i}_lvl`).innerText = level;
+        document.getElementById(`skill${i}_xp`).innerText = 0;
+        totalSkillLevelsGained++;
+        if (totalSkillLevelsGained % 3 === 0) {
+          availableStatPoints++;
+          document.getElementById("availableStats").innerText = availableStatPoints;
+        }
+      }
+    }
+  }
+};
+</script>
+
+</body>
+</html>
